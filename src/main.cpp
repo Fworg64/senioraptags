@@ -44,6 +44,8 @@ int main()
 	//Eigen::AngleAxisf angryAxe;
 	//Eigen::Vector3f axisOfRotation;
 	Eigen::Vector3f eulerAngles;
+	float Xpos;
+	float Ypos;
 	float rotationAngle;
 
 	//these need loaded from a camera calibration
@@ -96,11 +98,19 @@ int main()
                                      <<eulerAngles(1) << std::endl
                                      <<eulerAngles(2) << std::endl;
             //std::cout << "angle: " <<rotationAngle<<std::endl;
-            
 
 			//actual X = Z measurement
             //actual Y = X measurement
 			//actual theta = first rotAngle
+            rotationAngle = eulerAngles(0) > M_PI/2 ? eulerAngles(0) - M_PI : eulerAngles(0);
+			Xpos = cameraInTagT(2,3);
+			Ypos = cameraInTagT(0,3);
+			std::cout <<"Actual Data: " <<std::endl
+					  <<"X    : " << Xpos <<std::endl
+				      <<"Y    : " << Ypos <<std::endl
+					  <<"Theta: " << rotationAngle<<std::endl;
+
+
 		}
 	}
 }
