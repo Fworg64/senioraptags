@@ -17,4 +17,6 @@ TagDetector.h
 -
 eigen3/Eigen/Dense
 -
+eigen3/Eigen/Geometry
+-
 

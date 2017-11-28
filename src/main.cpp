@@ -18,10 +18,11 @@
 #include <TagDetector.h> //system library?
 
 #include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Geometry>
 
 #define DEFAULT_TAG_FAMILY "Tag36h11"
 
-Eigen::Matrix4d getRelativeTransform(double tag_size,const cv::Point2f tag_p[], double fx, double fy, double px, double py);
+Eigen::Matrix4f getRelativeTransform(double tag_size,const cv::Point2f tag_p[], double fx, double fy, double px, double py);
 
 int main()
 {
@@ -38,7 +39,12 @@ int main()
 	TagDetector detector(fam, p);
 	TagDetectionArray detections;
 
-	Eigen::Matrix4d myT;
+	Eigen::Matrix4f myT;
+	Eigen::Matrix4f cameraInTagT;
+	//Eigen::AngleAxisf angryAxe;
+	//Eigen::Vector3f axisOfRotation;
+	Eigen::Vector3f eulerAngles;
+	float rotationAngle;
 
 	//these need loaded from a camera calibration
     float camfx = 730;
@@ -72,17 +78,34 @@ int main()
         for(size_t index=0;index<detections.size(); ++index)
 		{
 			const TagDetection& currDetection = detections[index];
+			//get transform from camera to tag (tag in camera coord)
 			myT = getRelativeTransform(tagsize, currDetection.p, camfx, camfy, campx, campy);
+			//need to get inverse (camera in tag coords)
+			cameraInTagT = myT.inverse();
+            Eigen::Matrix3f wRo = cameraInTagT.topLeftCorner(3,3);
+			//Eigen::AngleAxisf angryAxe(wRo);
+			//axisOfRotation = angryAxe.axis();
+			//rotationAngle = angryAxe.angle();
+			eulerAngles = wRo.eulerAngles(1,2,0);
 			std::cout <<"Found tag with ID: " <<currDetection.id <<std::endl;
-			std::cout << "X: " <<myT(0, 3)<<std::endl;
-			std::cout << "Y: " <<myT(1, 3)<<std::endl;
-            std::cout << "Z: " <<myT(2, 3)<<std::endl;
+			std::cout << "X: " <<cameraInTagT(0, 3)<<std::endl;
+			std::cout << "Y: " <<cameraInTagT(1, 3)<<std::endl;
+            std::cout << "Z: " <<cameraInTagT(2, 3)<<std::endl; 
+            std::cout << "rotAngles: " <<std::endl
+                                     <<eulerAngles(0) << std::endl
+                                     <<eulerAngles(1) << std::endl
+                                     <<eulerAngles(2) << std::endl;
+            //std::cout << "angle: " <<rotationAngle<<std::endl;
             
+
+			//actual X = Z measurement
+            //actual Y = X measurement
+			//actual theta = first rotAngle
 		}
 	}
 }
 
-Eigen::Matrix4d getRelativeTransform(double tag_size,const cv::Point2f tag_p[], double fx, double fy, double px, double py)
+Eigen::Matrix4f getRelativeTransform(double tag_size,const cv::Point2f tag_p[], double fx, double fy, double px, double py)
 {
    std::vector<cv::Point3f> objPts;
    std::vector<cv::Point2f> imgPts;
@@ -111,10 +134,10 @@ Eigen::Matrix4d getRelativeTransform(double tag_size,const cv::Point2f tag_p[], 
    cv::solvePnP(objPts, imgPts, cameraMatrix, distParam, rvec, tvec);
    cv::Matx33d r;
    cv::Rodrigues(rvec, r);
-   Eigen::Matrix3d wRo;
+   Eigen::Matrix3f wRo;
    wRo << r(0,0), r(0,1), r(0,2), r(1,0), r(1,1), r(1,2), r(2,0), r(2,1), r(2,2);
  
-   Eigen::Matrix4d T; 
+   Eigen::Matrix4f T; 
    T.topLeftCorner(3,3) = wRo;
    T.col(3).head(3) << tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2);
    T.row(3) << 0,0,0,1;
