@@ -1,5 +1,0 @@
-/home/fworg64/senioraptags/build/CMakeFiles/edit_cache.dir
-/home/fworg64/senioraptags/build/CMakeFiles/rebuild_cache.dir
-/home/fworg64/senioraptags/build/src/CMakeFiles/rebuild_cache.dir
-/home/fworg64/senioraptags/build/src/CMakeFiles/edit_cache.dir
-/home/fworg64/senioraptags/build/src/CMakeFiles/senioraptags.dir
