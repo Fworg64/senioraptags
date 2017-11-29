@@ -5,28 +5,10 @@ project(SENIORAPTAGS)
 set(EXECUTABLE_OUTPUT_PATH ./)
 set(LIBRARY_OUTPUT_PATH ./)
 
-#if(APPLE)
-#  include_directories(/opt/local/include) # MacPorts
-#  link_directories(/opt/local/lib)
-#  find_library(OPENGL_LIBRARY OpenGL)
-#else()
-#  find_library(OPENGL_LIBRARY GL)
-#  find_library(GLU_LIBRARY GLU)
-#  set(OPENGL_LIBRARY ${OPENGL_LIBRARY} ${GLU_LIBRARY})
-#endif()
-
-#find_library(GLUT_LIBRARY glut)
-
 include(FindPkgConfig)
 
 pkg_search_module(OPENCV REQUIRED opencv>=2.3 opencv-2.3.1)
 include_directories(${OPENCV_INCLUDE_DIRS})
-
-#pkg_check_modules(CAIRO cairo)
-
-#if (${CAIRO_FOUND})
-#add_definitions(-DMZ_HAVE_CAIRO)
-#endif ()
 
 find_package( CGAL QUIET COMPONENTS  )
 
@@ -39,7 +21,7 @@ else()
 endif()
 
 set(CMAKE_C_FLAGS "-Wall -g")
-set(CMAKE_CXX_FLAGS "-Wall -g")
+set(CMAKE_CXX_FLAGS "-Wall -g -std=c++11")
 
 if (APPLE OR UNIX)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wsign-compare -frounding-math")
@@ -53,3 +35,4 @@ set(CMAKE_C_FLAGS_RELEASE "-O2")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 add_subdirectory(src)
+#include_directories(include)

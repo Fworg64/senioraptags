@@ -3,8 +3,8 @@
 2. Pipes it into apriltags.
 3. Then finds the transform from the camera to the tag
    and extracts the angle from this transform
-4. Tells the servo to move to this angle through 
-   an overdamped PI compensator (for now, 
+4. Tells the servo to move to this angle through
+   an overdamped PI compensator (for now,
    will later need to be type 2 system.)
 5. Sends transform from tag to camera X,Y,theta
    over CAN in a format
@@ -19,6 +19,8 @@
 
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
+
+#include <can_sensors/position_can_sensor.h>
 
 #define DEFAULT_TAG_FAMILY "Tag36h11"
 
@@ -41,8 +43,6 @@ int main()
 
 	Eigen::Matrix4f myT;
 	Eigen::Matrix4f cameraInTagT;
-	//Eigen::AngleAxisf angryAxe;
-	//Eigen::Vector3f axisOfRotation;
 	Eigen::Vector3f eulerAngles;
 	float Xpos;
 	float Ypos;
@@ -56,6 +56,12 @@ int main()
 
 	float tagsize = .0505;
 
+	//can stuff
+    PositionCanSensor posSensor(20, (char*)"can0");
+
+
+
+    //camera stuff
 	cv::VideoCapture cap(0);
 	if(!cap.isOpened()) return -1;
 
@@ -74,7 +80,7 @@ int main()
     {
         cap >> img;
         cv::cvtColor(img, img2, cv::COLOR_BGR2GRAY);
-        
+
         detector.process(img2, opticalCenter, detections);
 
         for(size_t index=0;index<detections.size(); ++index)
@@ -92,7 +98,7 @@ int main()
 			std::cout <<"Found tag with ID: " <<currDetection.id <<std::endl;
 			std::cout << "X: " <<cameraInTagT(0, 3)<<std::endl;
 			std::cout << "Y: " <<cameraInTagT(1, 3)<<std::endl;
-            std::cout << "Z: " <<cameraInTagT(2, 3)<<std::endl; 
+            std::cout << "Z: " <<cameraInTagT(2, 3)<<std::endl;
             std::cout << "rotAngles: " <<std::endl
                                      <<eulerAngles(0) << std::endl
                                      <<eulerAngles(1) << std::endl
@@ -109,6 +115,15 @@ int main()
 					  <<"X    : " << Xpos <<std::endl
 				      <<"Y    : " << Ypos <<std::endl
 					  <<"Theta: " << rotationAngle<<std::endl;
+
+            if (posSensor.sendData(Xpos, Ypos, rotationAngle, 0) == PositionCanSensor::SendStatus::WRITE_FAILED)
+            {
+                std::cout <<"CAN WRITE ERRRORORORORO!!!!"<<std::endl;
+            }
+            else
+            {
+                std::cout <<"can write success" <<std::endl;
+            }
 
 
 		}
@@ -134,7 +149,7 @@ Eigen::Matrix4f getRelativeTransform(double tag_size,const cv::Point2f tag_p[], 
    imgPts.push_back(cv::Point2f(tag_p[1][0], tag_p[1][1]));
    imgPts.push_back(cv::Point2f(tag_p[2][0], tag_p[2][1]));
    imgPts.push_back(cv::Point2f(tag_p[3][0], tag_p[3][1]));*/
- 
+
    cv::Mat rvec, tvec;
    cv::Matx33f cameraMatrix(
                             fx, 0, px,
@@ -146,11 +161,11 @@ Eigen::Matrix4f getRelativeTransform(double tag_size,const cv::Point2f tag_p[], 
    cv::Rodrigues(rvec, r);
    Eigen::Matrix3f wRo;
    wRo << r(0,0), r(0,1), r(0,2), r(1,0), r(1,1), r(1,2), r(2,0), r(2,1), r(2,2);
- 
-   Eigen::Matrix4f T; 
+
+   Eigen::Matrix4f T;
    T.topLeftCorner(3,3) = wRo;
    T.col(3).head(3) << tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2);
    T.row(3) << 0,0,0,1;
- 
+
    return T;
 }
