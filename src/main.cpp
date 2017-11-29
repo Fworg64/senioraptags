@@ -59,8 +59,6 @@ int main()
 	//can stuff
     PositionCanSensor posSensor(20, (char*)"can0");
 
-
-
     //camera stuff
 	cv::VideoCapture cap(0);
 	if(!cap.isOpened()) return -1;
@@ -91,9 +89,7 @@ int main()
 			//need to get inverse (camera in tag coords)
 			cameraInTagT = myT.inverse();
             Eigen::Matrix3f wRo = cameraInTagT.topLeftCorner(3,3);
-			//Eigen::AngleAxisf angryAxe(wRo);
-			//axisOfRotation = angryAxe.axis();
-			//rotationAngle = angryAxe.angle();
+
 			eulerAngles = wRo.eulerAngles(1,2,0);
 			std::cout <<"Found tag with ID: " <<currDetection.id <<std::endl;
 			std::cout << "X: " <<cameraInTagT(0, 3)<<std::endl;
@@ -144,11 +140,6 @@ Eigen::Matrix4f getRelativeTransform(double tag_size,const cv::Point2f tag_p[], 
    imgPts.push_back(tag_p[1]);
    imgPts.push_back(tag_p[2]);
    imgPts.push_back(tag_p[3]);
-
-   /*imgPts.push_back(cv::Point2f(tag_p[0][0], tag_p[0][1]));
-   imgPts.push_back(cv::Point2f(tag_p[1][0], tag_p[1][1]));
-   imgPts.push_back(cv::Point2f(tag_p[2][0], tag_p[2][1]));
-   imgPts.push_back(cv::Point2f(tag_p[3][0], tag_p[3][1]));*/
 
    cv::Mat rvec, tvec;
    cv::Matx33f cameraMatrix(
