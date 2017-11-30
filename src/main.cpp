@@ -15,7 +15,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
-#include <TagDetector.h> //system library?
+#include <TagDetector.h>
 
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
@@ -23,6 +23,9 @@
 #include <can_sensors/position_can_sensor.h>
 
 #define DEFAULT_TAG_FAMILY "Tag36h11"
+
+#include <chrono> // for cross platform waiting
+#include <thread>
 
 Eigen::Matrix4f getRelativeTransform(double tag_size,const cv::Point2f tag_p[], double fx, double fy, double px, double py);
 
@@ -57,7 +60,7 @@ int main()
 	float tagsize = .0505;
 
 	//can stuff
-    PositionCanSensor posSensor(20, (char*)"can0");
+    PositionCanSensor posSensor(40, (char*)"can0");
 
     //camera stuff
 	cv::VideoCapture cap(0);
@@ -120,6 +123,8 @@ int main()
             {
                 std::cout <<"can write success" <<std::endl;
             }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
 
 		}
