@@ -1,13 +1,18 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <stdio.h>
 #include <unistd.h>
 //#include <fcntl.h>
 #include <dynamixel_control.h>
 
-int main(char **argv, char argc)
+int main(int argc, char **argv)
 {
 	int ret;
-	unsigned int ctr = 0;
-	float vel = 2.0f;
+	//unsigned int ctr = 0;
+	//float vel = 2.0f;
 	ret = init_file ();
 	if (ret >0 ){
 		printf ("opened file\n");
@@ -27,3 +32,8 @@ int main(char **argv, char argc)
 	}
 		return 0;
 }
+
+
+#ifdef __cplusplus
+}
+#endif

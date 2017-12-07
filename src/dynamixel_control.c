@@ -12,7 +12,7 @@ char readBuf[MAX_BUFFER_SIZE];
 char writeBuf[MAX_BUFFER_SIZE];
 
 
-#define DEVICE_NAME	"/mnt/bbb/rpmsg_pru30"
+#define DEVICE_NAME	"/dev/rpmsg_pru30"
 
 #define RPM_PER_COUNT	0.1111f
 #define RAD_PER_RPM	(.10467f)
@@ -35,7 +35,8 @@ int16_t init_file (){
 
 
 int16_t set_velocity (float velocity){
-	struct cmd_packet pack;
+        int16_t ret;
+        struct cmd_packet pack;
 	pack.cmd = SET_VELOCITY;
 	pack.param = (int16_t)-1.0f* (velocity/RPS_PER_COUNT);
 	if (pack.param > 1023){
@@ -45,8 +46,8 @@ int16_t set_velocity (float velocity){
 	}
 	pack.magic = MAGIC_WORD;
 	memcpy (writeBuf, &pack, sizeof (struct cmd_packet));
-	write (pollfds[0].fd, writeBuf, sizeof (struct cmd_packet));
-	return 0;
+	ret = write (pollfds[0].fd, writeBuf, sizeof (struct cmd_packet));
+	return ret;
 }
 
 int16_t get_velocity (float *velocity){
@@ -69,7 +70,8 @@ int16_t get_velocity (float *velocity){
 }
 
 int16_t set_position (float pos ){
-	struct cmd_packet pack;
+	int16_t ret;
+        struct cmd_packet pack;
 	pack.cmd = SET_POSITION;
 	pack.param= (int16_t) pos/RAD_PER_CNT;
 	pack.param += (1023>>1);
@@ -80,8 +82,8 @@ int16_t set_position (float pos ){
 	}
 	pack.magic = MAGIC_WORD;
 	memcpy (writeBuf, &pack, sizeof (struct cmd_packet));
-	write (pollfds[0].fd, writeBuf, sizeof (struct cmd_packet));
-	return (0);
+	ret = write (pollfds[0].fd, writeBuf, sizeof (struct cmd_packet));
+	return ret;
 }
 
 
@@ -111,7 +113,8 @@ int16_t close_file (void){
 }
 
 int16_t set_servo_speed (float speed){
-	struct cmd_packet pack;
+        int16_t ret;
+        struct cmd_packet pack;
 	pack.cmd = SET_SPEED;
 	pack.param = (int16_t) -1.0f*(speed/RPS_PER_COUNT);
 	if (pack.param > 1023){
@@ -121,6 +124,6 @@ int16_t set_servo_speed (float speed){
 	}
 	pack.magic = MAGIC_WORD;
 	memcpy (writeBuf, &pack, sizeof (struct cmd_packet));
-	write (pollfds[0].fd, writeBuf, sizeof (struct cmd_packet));
-	return 0;
+	ret = write (pollfds[0].fd, writeBuf, sizeof (struct cmd_packet));
+	return ret;
 }
