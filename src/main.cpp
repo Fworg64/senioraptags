@@ -22,10 +22,15 @@
 
 #include <can_sensors/position_can_sensor.h>
 
+#include <dynamixel_control.h>
+
 #define DEFAULT_TAG_FAMILY "Tag36h11"
 
 #include <chrono> // for cross platform waiting
 #include <thread>
+
+#define GAIN1 .82f
+#define GAIN2 .23f
 
 Eigen::Matrix4f getRelativeTransform(double tag_size,const cv::Point2f tag_p[], double fx, double fy, double px, double py);
 
@@ -59,6 +64,13 @@ int main()
 
 	float tagsize = .0505;
 
+	//control system stuff
+	float tagX       =0;
+	float error      =0;
+	float output     =0;
+    float prevOutput =0;
+    float prevError  =0;
+
 	//can stuff
     PositionCanSensor posSensor(40, (char*)"can0");
 
@@ -77,8 +89,17 @@ int main()
 
     std::cout <<"Camera hot!" <<std::endl;
 
+    init_file(); //for dynamixel
+
+    //for loop timing
+    std::chrono::system_clock::time_point calc_start;
+    std::chrono::system_clock::time_point calc_end;
+    std::chrono::milliseconds calc_time;
+
     while(1)
     {
+        calc_start = std::chrono::system_clock::now();
+
         cap >> img;
         cv::cvtColor(img, img2, cv::COLOR_BGR2GRAY);
 
@@ -89,6 +110,14 @@ int main()
 			const TagDetection& currDetection = detections[index];
 			//get transform from camera to tag (tag in camera coord)
 			myT = getRelativeTransform(tagsize, currDetection.p, camfx, camfy, campx, campy);
+			//want to center dynamixel/camera on tag so make tag be in center
+			tagX = currDetection.cxy.x;
+			error= tagX - 160; //positive error means turn CCW, negative means turn CW
+            output = GAIN1 * prevOutput + GAIN2 * prevError;
+            set_velocity(output);
+            prevOutput = output;
+            prevError = error;
+
 			//need to get inverse (camera in tag coords)
 			cameraInTagT = myT.inverse();
             Eigen::Matrix3f wRo = cameraInTagT.topLeftCorner(3,3);
@@ -124,8 +153,15 @@ int main()
                 std::cout <<"can write success" <<std::endl;
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
+            calc_end = std::chrono::system_clock::now();
+            calc_time = std::chrono::duration_cast<std::chrono::milliseconds>(calc_end - calc_start);
+
+            if (calc_time > std::chrono::milliseconds(25)) std::cout <<"TOO SLOW" <<std::endl;
+            else
+            {
+                 std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::milliseconds(25) - (calc_end - calc_start)));
+            }
 
 		}
 	}
